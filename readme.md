@@ -47,15 +47,15 @@ The attached folder also contains the complete codebase used during development 
 
 ### 1. Replace the RF Switch
 
-The current SP4T/SP6T switch used during calibration introduces enough return loss to distort the reference plane. Replacing it with a higher-performance RF switch with improved return loss should significantly improve calibration accuracy.
+The current SP4T/SP6T switch used during calibration introduces enough return loss (~-15dB) to distort the reference plane. Replacing it with a higher-performance RF switch with improved return loss should significantly improve calibration accuracy.
 
 ### 2. Upgrade the Directional Coupler
 
-For the AD8302 implementation, a directional coupler with higher directivity should be used in the calibration path. This will improve isolation between the forward and reflected signals, resulting in more accurate measurements.
+For the AD8302 implementation, a directional coupler with higher directivity (can be quickly improved 10-20dB) should be used in the calibration path. This will improve isolation between the forward and reflected signals, resulting in more accurate measurements.
 
 ### 3. Continue Development of the Cancellation Routine
 
-I have a few theories on how the cancellation routine could be improved, but Dr. Gogineni's understanding of the underlying theory is significantly more comprehensive than mine. I recommend following his guidance for future work on the cancellation routine, as his explanations and design rationale are more technically informed.
+I have a few theories on how the cancellation routine could be improved, but Dr. Gogineni's understanding of the underlying theory is much more comprehensive than mine. I recommend following his guidance for future work on the cancellation routine, as his explanations and design rationale are much more technically informed.
 
 ---
 
