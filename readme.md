@@ -15,7 +15,7 @@ The repository is intended as a handoff package for future development and shoul
 
 ### `Project.drawio`
 
-[https://drive.google.com/file/d/1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau/view?usp=sharing](draw.io link)
+[https://drive.google.com/file/d/1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau/view?usp=sharing] (draw.io_link)
 The Draw.io file contains the primary documentation for the project and is organized into four tabs.
 
 #### Tab 1 – RF Chain Diagrams
