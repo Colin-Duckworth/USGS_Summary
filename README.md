@@ -55,9 +55,8 @@ For the AD8302 implementation, a directional coupler with higher directivity sho
 
 ### 3. Continue Development of the Cancellation Routine
 
-I have a few theories on how the cancellation routine could be improved, but Dr. Gogineni's understanding of the underlying theory is much more comprehensive than mine. I recommend following his guidance for future work on the cancellation routine, as his explanations and design rationale are significantly more technically informed. Whomever is continuing my work can reach out to me (clduckworth@crimson.ua.edu) and I can forward the documents he shared regarding the cancellation, or reach out to him directly (pgogineni@ua.edu).
+I have a few ideas for improving the cancellation routine, but Dr. Gogineni has a much deeper understanding of the underlying theory and design considerations. I recommend using his guidance as the primary reference for any future development of the cancellation algorithm. Anyone continuing this project is welcome to contact me at clduckworth@crimson.ua.edu, and I can forward the documentation Dr. Gogineni shared regarding the cancellation routine. Alternatively, you can reach out to Dr. Gogineni directly at pgogineni@ua.edu for guidance.
 
----
 
 ## Final Notes
 
