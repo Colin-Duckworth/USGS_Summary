@@ -1,8 +1,8 @@
-# RF Measurement System
+# USGS RF System
 
 ## Overview
 
-This repository contains the documentation and source code for the RF measurement system developed during my summer internship. The project evolved through two primary implementations:
+This repository contains the documentation and source code for the USGS RF System developed during my summer. The project evolved through two primary implementations:
 
 1. **AD8302-based system** (initial implementation)
 2. **NanoVNA-based system** (updated implementation)
@@ -15,6 +15,7 @@ The repository is intended as a handoff package for future development and shoul
 
 ### `Project.drawio`
 
+[https://drive.google.com/file/d/1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau/view?usp=sharing](draw.io link)
 The Draw.io file contains the primary documentation for the project and is organized into four tabs.
 
 #### Tab 1 – RF Chain Diagrams
