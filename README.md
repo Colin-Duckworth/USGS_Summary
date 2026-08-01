@@ -61,4 +61,4 @@ I have a few theories on how the cancellation routine could be improved, but Dr.
 
 ## Final Notes
 
-The Draw.io diagrams should be the primary reference for understanding the hardware architecture, while the source code provides the current software implementation. Together, they should provide a solid foundation for continuing development of the project.
+The Draw.io diagrams should be the main reference for understanding the hardware architecture, while the source code provides the current software implementation. Together, they should provide a solid foundation for continuing development of the project.
