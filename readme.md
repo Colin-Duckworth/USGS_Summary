@@ -1,64 +1,134 @@
-# USGS RF System
+  AD8302 Reflectometer — README
 
-## Overview
+  Hardware
+  - Arduino UNO R4 Minima (Renesas RA4M1, 32 KB RAM, 256 KB flash)
+  - AD8302 eval board
+  - VMAG → A0, VPHS → A1
+  - Eval board AREF pin → Arduino AREF pin (~2.4 V)
+  - RFSoC UART → D0 (RX) / D1 (TX)  [Serial1, 160979 8N1]
 
-This repository contains the documentation and source code for the USGS RF System developed during my summer. The project evolved through two primary implementations:
+  Pinout (Arduino UNO R4 Minima)
+  - D0   UART RX   ← RFSoC UART TX   (Serial1, 160979 8N1)
+  - D1   UART TX   → RFSoC UART RX   (Serial1, 160979 8N1)
+  - D10  SPDT C1 — switch1_thru/switch1_delay, ZMSW-1211 (experimentally verified)
+  - D11  SPDT C2 — switch1_thru/switch1_delay, ZMSW-1211 (experimentally verified)
+  - D5   SP6T C1 — switch2_*, JSW6-33DR+ (experimentally verified)
+  - D6   SP6T C2 — switch2_*, JSW6-33DR+ (experimentally verified)
+  - D7   SP6T C3 — switch2_*, JSW6-33DR+ (experimentally verified)
+  - A0   VMAG (AD8302 eval board)
+  - A1   VPHS (AD8302 eval board)
+  - AREF Eval board AREF pin → Arduino AREF pin (~2.4 V)
 
-1. **AD8302-based system** (initial implementation)
-2. **NanoVNA-based system** (updated implementation)
+  ADC Reference
+  - Uses AR_EXTERNAL (RA4M1 core constant) — the eval board's stable ~2.4 V on the AREF pin
+  - Measure actual AREF with a DMM; update AREF_MV in config.h to zero gain offset
+  - The old ATmega bandgap trick does not apply to the RA4M1
 
-The repository is intended as a handoff package for future development and should provide enough information to understand the system architecture and continue the project.
+  AD8302 Transfer Function
+  - VMAG: gain_dB = (vmag_mV − 900) / 29    slope 29 mV/dB, 0 dB = 900 mV, range ±30 dB
+  - VPHS: phase_deg = (1800 − vphs_mV) / 10  0° → 1800 mV, 180° → ~30 mV
+  - Phase detector dead zones near 0° and 180° — best performance near 90°
+  - Phase output is unsigned — cannot distinguish leading from lagging
 
----
+  Frequency Plan
+  - OSL calibration:  40–600 MHz, 5 MHz steps  → 113 points  (fixed, flight-invariant)
+  - Gamma sweep:      40–600 MHz, 1 MHz steps  → 561 points  (driven by RFSoC)
 
-## Repository Contents
+  Architecture (RFSoC = master, Arduino = slave)
+  - RFSoC drives all sequencing via ASCII commands over Serial1
+  - Arduino responds ACK/NACK to each command/frequency step
+  - After a complete 561-point sweep Arduino streams the full corrected dataset to RFSoC
 
-### `Project.drawio`
+  UART Protocol (160979 8N1, newline-terminated ASCII)
+    RFSoC → Arduino commands:
+      OSL_BEGIN       initiate OSL calibration; Arduino drives SHORT→OPEN→LOAD autonomously
+      FREQ <hz>       RFSoC has tuned to this frequency; Arduino samples and ACKs
+      GAMMA_BEGIN     load error terms; route SP6T to antenna, SPDT to delay; prepare sweep
 
-**[View the Draw.io Documentation](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=USGS_Summary.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau%26export%3Ddownload)**
-The Draw.io file contains the primary documentation for the project and is organized into four tabs.
+    Arduino → RFSoC responses:
+      ACK             ready / step complete
+      NACK            out-of-sequence or index overflow
+      CAL_DONE        OSL complete; error terms saved to EEPROM
+      DATA_BEGIN      precedes gamma dataset
+      <hz>,<mag>,<ph> one OSL-corrected GammaPoint (561 lines)
+      DATA_END        gamma dataset complete
 
-#### Tab 1 – RF Chain Diagrams
-Contains the RF chain diagrams for both implementations:
+  OSL Calibration Flow
+  1. RFSoC sends OSL_BEGIN; Arduino ACKs, routes SP6T to SHORT
+  2. RFSoC sends 339 × FREQ commands (113 per standard, same array repeated 3×)
+     - After FREQ 113: Arduino autonomously switches SP6T to OPEN
+     - After FREQ 226: Arduino autonomously switches SP6T to LOAD
+     - After FREQ 339: Arduino computes error terms, saves to EEPROM, sends CAL_DONE
 
-- **AD8302 Version** (first)
-- **NanoVNA Version** (second)
+  Gamma Characterization Flow
+  1. RFSoC sends GAMMA_BEGIN; Arduino loads error terms, routes SP6T to antenna,
+     sets SPDT to delay, ACKs
+  2. RFSoC sends 561 × FREQ commands; Arduino stores raw delay measurements, ACKs each
+     - After FREQ 561: Arduino autonomously switches SPDT to thru
+  3. RFSoC sends 561 × FREQ commands; Arduino stores raw thru measurements, ACKs each
+     - After FREQ 561: Arduino resolves phase ambiguity, applies OSL correction,
+       sends DATA_BEGIN … 561 CSV lines … DATA_END
 
-These diagrams show the RF signal path and overall system architecture for each version.
+  Phase Ambiguity Resolution
+  - AD8302 phase output is unsigned (0–180°); true phase may be +θ or -θ
+  - SPDT delay line introduces a known delay of 0.431 deg/MHz
+  - Expected phase difference at frequency f: Δφ_expected = 0.431 × f_MHz degrees
+  - If (phase_delay - phase_thru) matches +Δφ_expected → phase is positive (no flip)
+  - If the difference goes the wrong direction → phase was folded; negate to correct
+  - Note: Δφ_expected exceeds 180° above ~418 MHz; comparison must be done mod 360°
 
-#### Tab 2 – Calibration Routine
-Contains the calibration routine flowchart used by the system.
+  File Structure
+    config.h       — all #defines, structs, shared extern declarations
+    adc.h/cpp      — ADC init, trimmed-mean sample(), gainphase_to_gamma()
+    osl.h/cpp      — OSL cal buffer, error-term computation, EEPROM save/load, correction
+    comms.h/cpp    — UART line reader, command parser, ACK/NACK/data senders
+    switch.h/cpp   — SP6T and SPDT GPIO control
+    USGS_AD8302.ino — main sketch: setup/loop, state machine
 
-#### Tab 3 – Power & Digital Signal Flow
-Contains the power distribution and digital signal flow diagram for the system electronics.
+  Switching (logic tables experimentally verified against real hardware —
+  supersede any earlier assumed/datasheet-derived mapping)
+  - SPDT (switch1_thru / switch1_delay): phase ambiguity resolution
+      IC: ZMSW-1211 (connectorized)
+      C1(D10) C2(D11) → port
+      0       1       → thru (short, non-delayed cable)
+      1       0       → delay (longer, delayed cable)
+      0       0  /  1  1  → undefined, never drive this
 
-#### Tab 4 – Custom Filter Design
-Contains the design information and documentation for the custom RF filter used in the project.
+  - SP6T (switch2_*): calibration standard / antenna selection
+      IC: JSW6-33DR+ (connectorized)
+      C1(D5) C2(D6) C3(D7) → port
+      0      0      0      → antenna
+      1      0      1      → short
+      1      1      0      → open
+      1      0      0      → load (50 Ω)
+      all other combinations → terminated, never activate
 
----
+  EEPROM Layout (R4 Minima: 8 KB emulated)
+  - Addr 0: error_terms[113]  =  113 × 24 bytes  =  2 712 bytes
 
-## Source Code
+  OSL Error Terms
+  The three-term error model derives one complex error term per calibration frequency
+  from three known-standard measurements (Open, Short, Load).
 
-The attached folder also contains the complete codebase used during development of the project.
+  - Directivity (e00)
+      Energy from the incident wave that leaks directly into the reflection measurement
+      path without ever reaching the DUT. Even a perfectly matched DUT would produce a
+      non-zero reflected reading due to finite directivity in the physical coupler.
+      Numerically: e00 = GM_load (the measured reflection of the 50-ohm load).
 
----
+  - Source Match (e11)
+      The impedance mismatch looking back from the DUT into the measurement device.
+      When the DUT reflects, part of that returning wave re-reflects off the coupler
+      back toward the DUT, creating a cascading reflection effect. This is not an
+      abstract term — it is a real impedance looking back from the DUT port.
 
-## Recommended Next Steps
+  - Tracking (delta_e, also written e10*e01)
+      The total transmission response of the path the reflected wave travels: from the source,
+      forward through the coupler to the DUT, back from the DUT to the receiver.
+      Captures all cable losses, connector interface losses, and coupler insertion loss
+      in both directions. Does not include the DUT reflection itself.
 
-### 1. Replace the RF Switch
-
-The current SP4T/SP6T switch used during calibration introduces enough return loss (~-15dB) to distort the reference plane. Replacing it with a higher-performance RF switch with improved return loss should significantly improve calibration accuracy.
-
-### 2. Upgrade the Directional Coupler
-
-For the AD8302 implementation, a directional coupler with higher directivity (can be quickly improved 10-20dB) should be used in the calibration path. This will improve isolation between the forward and reflected signals, resulting in more accurate measurements.
-
-### 3. Continue Development of the Cancellation Routine
-
-I have a few theories on how the cancellation routine could be improved, but Dr. Gogineni's understanding of the underlying theory is much more comprehensive than mine. I recommend following his guidance for future work on the cancellation routine, as his explanations and design rationale are much more technically informed.
-
----
-
-## Final Notes
-
-The Draw.io diagrams should be the primary reference for understanding the hardware architecture, while the source code provides the current software implementation. Together, they should provide a solid foundation for continuing development of the project.
+  Known Calibration Notes
+  - SHORT negation: AD8302 phase is unsigned; osl_store_sample() negates SHORT phase
+    to place it in the lower complex half-plane for correct OSL algebra
+  - Floating VMAG reads ~52 dB — verify pin connection before use
