@@ -16,7 +16,7 @@ The repository is intended as a handoff package for future development and shoul
 ### `Project.drawio`
 
 The Draw.io file contains the primary documentation for the project and is organized into four tabs.
-[Open the Draw.io Diagram](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=USGS_Summary.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau%26export%3Ddownload)
+[Open the Draw.io Diagram]([[https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=USGS_Summary.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau%26export%3Ddownload](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=USGS_RFchain.drawio&page-id=A0hF7V9FG_72OF4ILqJ3&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1dTqwNJABriTpAbBzJGA4YtCAzyaBGVeL%26export%3Ddownload)](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=USGS_Summary.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1AIg-5LYU0VLGQAHxca7ommk_bvHUHpau%26export%3Ddownload#%7B%22pageId%22%3A%22Ll7vR38r0CmVPtSaqMqS%22%7D))
 
 #### Tab 1 – RF Chain Diagrams
 Contains the RF chain diagrams for both implementations:
